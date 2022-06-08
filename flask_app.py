@@ -196,6 +196,25 @@ def QREncoder(d):
 
 	return b2
 
+def cleanDictValues(dictionary):
+	# print(type(dictionary))
+	if type(dictionary) == type({}):
+		for k,v in dictionary.items():
+			# print("\t",type(v))
+			if type(v) == type(""):
+				dictionary[k] = v.replace("\"","'").replace("\n"," ").replace("ç","c")
+			if type(v) == type({}) or type(v) == type([]):
+				dictionary[k] = cleanDictValues(v)
+	if type(dictionary) == type([]):
+		# print("running list")
+		for k,v in enumerate(dictionary):
+			# print("\t",k,type(v))
+			if type(v) == type(""):
+				dictionary[k] = v.replace("\"","'").replace("\n"," ").replace("ç","c")
+			if type(v) == type({}) or type(v) == type([]):
+				dictionary[k] = cleanDictValues(v)
+	return dictionary
+
 @hops.component(
 	"/requestGet",
 	name="requestGet",
@@ -215,21 +234,26 @@ def requestGet(url, headers):
 		import json
 		print(headers)
 		run = False
-		allowedDomains = ['https://api.namefake.com']
+		allowedDomains = ['https://api.namefake.com','https://random-data-api.com', 'https://api-footprint.techequipt.com.au','https://tgbcalc.com']
 		for aD in allowedDomains:
 			if url.startswith(aD):
 				run = True
+		print("run",run)
 		if run:
 			cookies_dict = json.loads(headers)
-			r = requests.get(url, cookies=cookies_dict)
+			r = requests.get(url, headers=cookies_dict)#cookies=cookies_dict,
 			response = r.json()
-
-			return json.dumps(response)
+			# print("response", response, type(response))
+			response = cleanDictValues(response)
+			return response
 		else:
 			return json.dumps({"error":"restricted domain"})
 		# return "Hello"
 	except Exception as e:
-		return str(e)
+		print("error",e)
+		return json.dumps({"error":str(e)})
+
+
 
 
 if __name__ == "__main__":
