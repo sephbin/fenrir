@@ -197,6 +197,7 @@ def QREncoder(d):
 	return b2
 
 def cleanDictValues(dictionary):
+	# print("cleanDictVal")
 	# print(type(dictionary))
 	if type(dictionary) == type({}):
 		for k,v in dictionary.items():
@@ -232,25 +233,35 @@ def requestGet(url, headers):
 	try:
 		import requests
 		import json
-		print(headers)
-		run = False
-		allowedDomains = ['https://api.namefake.com','https://random-data-api.com', 'https://api-footprint.techequipt.com.au','https://tgbcalc.com']
-		for aD in allowedDomains:
-			if url.startswith(aD):
-				run = True
-		print("run",run)
-		if run:
-			cookies_dict = json.loads(headers)
-			r = requests.get(url, headers=cookies_dict)#cookies=cookies_dict,
-			response = r.json()
-			# print("response", response, type(response))
-			response = cleanDictValues(response)
-			return response
-		else:
-			return json.dumps({"error":"restricted domain"})
-		# return "Hello"
+		urls = url.split("|")
+		outList = []
+		for url_i in urls:
+			run = False
+			allowedDomains = ['https://api.namefake.com','https://random-data-api.com', 'https://api-footprint.techequipt.com.au','https://tgbcalc.com']
+			for aD in allowedDomains:
+				if url.startswith(aD):
+					run = True
+			# print("run",run)
+			if run:
+				cookies_dict = json.loads(headers)
+				r = requests.get(url_i, headers=cookies_dict)#cookies=cookies_dict,
+				response = r.json()
+				# print("response", response, type(response))
+				response = cleanDictValues(response)
+				# print(response)
+				if type(response) == type([]):
+					for r in response:
+						if type(r) == type({}):
+							r["url"] = url_i
+					outList = outList+response
+				else:
+					outList.append(response)
+			else:
+				return json.dumps({"error":"restricted domain"})
+			# return "Hello"
+		return outList
 	except Exception as e:
-		print("error",e)
+		# print("error",e)
 		return json.dumps({"error":str(e)})
 
 
