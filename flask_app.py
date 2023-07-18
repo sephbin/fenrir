@@ -4,6 +4,8 @@ import rhino3dm
 app = Flask(__name__)
 hops = hs.Hops(app)
 
+
+
 @hops.component(
 	"/projecttransform",
 	name="projecttransform",
@@ -232,20 +234,22 @@ def cleanDictValues(dictionary):
 				dictionary[k] = cleanDictValues(v)
 	return dictionary
 
+
+
 @hops.component(
 	"/requestGet",
 	name="requestGet",
 	description="requestGet",
 	# #icon="#icons/giraffeGetProject.png",
 	inputs = [
-		hs.HopsString("url", "U", "url" ),
-		hs.HopsString("headers", "H", "headers" ),
+		hs.HopsString("url", "U", "url", optional=True ),
+		hs.HopsString("headers", "H", "headers", optional=True ),
 	],
 	outputs = [
 		hs.HopsString("jsonOut", "J", "jsonOut"),
 	],
 )
-def requestGet(url, headers):
+def requestGet(url="https://api.namefake.com", headers = {}):
 	try:
 		import requests
 		import json
@@ -302,6 +306,21 @@ def renderSVG(svg):
 		import locale
 		# from PIL import Image
 		inkscape = r"C:\Program Files\Inkscape\bin\inkscape.exe"
+
+@hops.component(
+	"/TEST",
+	name="TEST",
+	description="TEST",
+	# icon="icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsCurve("TEST", "TEST", "TEST", access=hs.HopsParamAccess.LIST),
+		# hs.HopsDefault("DTEST", "DTEST", "DTEST" ),
+	],
+	outputs = [
+		hs.HopsCurve("objOUT", "O", "objOUT"),
+	],
+)
+def func_test(TEST=None):
 
 		result = subprocess.run([inkscape, '--export-type=png', '--export-filename=-', f'--export-width={420*72}', f'--export-height={297*72}', '--pipe'], input=svg[0].encode(), capture_output=True)
 		
@@ -407,6 +426,64 @@ def sendToDB(J):
 )
 def pointat(curve, t):
     return curve.PointAt(t)
+
+@hops.component(
+	"/getGeom",
+	name="getGeom",
+	description="getGeom",
+	# icon="icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("pk", "P", "pk", optional=True ),
+		# hs.HopsString("headers", "H", "headers", optional=True ),
+	],
+	outputs = [
+		hs.HopsString("jsonOut", "J", "jsonOut"),
+	],
+)
+def getGeom(pk):
+	import requests
+	import json
+	url = "http://localhost:8000/muninn/test/?updated__gt=2023-07-17+15%3A06%2B0000".format(pk=pk)
+	# url = "http://localhost:8000/muninn/test.json/"
+	r = requests.get(url)
+	response = r.json()
+	if type(response) != type([]):
+		response = [response]
+	response = list(map(lambda x: json.dumps(x["geometry"]), response))
+	return response
+
+
+@hops.component(
+	"/postGeom",
+	name="postGeom",
+	description="postGeom",
+	# icon="icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("post", "P", "post", optional=True ),
+		# hs.HopsString("headers", "H", "headers", optional=True ),
+	],
+	outputs = [
+		hs.HopsString("jsonOut", "J", "jsonOut"),
+	],
+)
+def postGeom(pk):
+	import requests
+	import json
+	pk = json.loads(pk)
+	# url = "http://localhost:8000/muninn/test.json/".format(pk=pk)
+	url = "http://localhost:8000/muninn/test/3/"
+	data = {"pk":3, "geometry":pk}
+	# r = requests.post(url, json=data)
+	r = requests.put(url, json=data)
+	print(r)
+	response = r.json()
+	try:
+		if type(response) != type([]):
+			response = [response]
+		response = list(map(lambda x: json.dumps(x["geometry"]), response))
+	except:
+		response = json.dumps(response)
+	return response
 
 
 if __name__ == "__main__":
