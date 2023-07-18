@@ -8,12 +8,12 @@ hops = hs.Hops(app)
 	"/projecttransform",
 	name="projecttransform",
 	description="projecttransform",
-	icon="/home/sephbin/fenrir/icons/projecttransform.png",
+	#icon="/home/sephbin/fenrir/#icons/projecttransform.png",
 	inputs = [
 		hs.HopsString("From", "F", "Projection From String" ),
 		hs.HopsString("To", "T", "Projection To String" ),
-		# hs.HopsString("Coordinates", "C", "Coordinates as String", access=hs.HopsParamAccess.LIST),
-		hs.HopsPoint("Coordinates", "C", "Coordinates as Points", access=hs.HopsParamAccess.LIST),
+		# hs.HopsString("Coordinates", "C", "Coordinates as String", hs.HopsParamAccess.LIST),
+		hs.HopsPoint("Coordinates", "C", "Coordinates as Points"),
 	],
 	outputs = [
 		hs.HopsPoint("T", "T", "Projected Point"),
@@ -22,26 +22,42 @@ hops = hs.Hops(app)
 
 
 def projecttransform(fromProj, toProj, coordinates):
-	from pyproj import Proj, Transformer
+	print(fromProj, toProj, coordinates)
+	points = None
+	try:
+		from pyproj import Proj, Transformer, CRS
+		fromCRS = CRS.from_epsg(int(fromProj.replace("EPSG:","")))
+		toCRS = CRS.from_epsg(int(toProj.replace("EPSG:","")))
+		# print(toCRS)
+		#print("-"*100)
+		print(fromCRS, fromCRS.area_of_use)
+		print(toCRS, toCRS.area_of_use)
+		# for d in dir(toCRS):
+		# 	print(d)
+		transformer = Transformer.from_crs(fromCRS,toCRS, always_xy=True)
 
-	transformer = Transformer.from_crs(fromProj,toProj, always_xy=True)
+		x_Dump = []
+		y_Dump = []
+		points = []
+		if type(coordinates) != type([]):
+			coordinates = [coordinates]
+		for coord in coordinates:
+			print(coord)
+			coords = transformer.transform(float(coord.X),float(coord.Y))
+			print(coords)
+			points.append(rhino3dm.Point3d(coords[0],coords[1],0))
+			x_Dump.append(coords[0])
+			y_Dump.append(coords[1])
 
-	x_Dump = []
-	y_Dump = []
-	points = []
-	for coord in coordinates:
-		coords = transformer.transform(float(coord.X),float(coord.Y))
-		points.append(rhino3dm.Point3d(coords[0],coords[1],0))
-		x_Dump.append(coords[0])
-		y_Dump.append(coords[1])
-
+	except Exception as e:
+		print(e)
 	return points
 
 @hops.component(
 	"/giraffeGetProjectList",
 	name="giraffeGetProjectList",
 	description="giraffeGetProjectList",
-	icon="/home/sephbin/fenrir/icons/giraffeGetProjectList.png",
+	#icon="/home/sephbin/fenrir/#icons/giraffeGetProjectList.png",
 	inputs = [
 		hs.HopsString("Token", "T", "Token" ),
 	],
@@ -69,7 +85,7 @@ def giraffeGetProjectList(token):
 	"/giraffeGetProject",
 	name="giraffeGetProject",
 	description="giraffeGetProject",
-	icon="/home/sephbin/fenrir/icons/giraffeGetProject.png",
+	#icon="/home/sephbin/fenrir/#icons/giraffeGetProject.png",
 	inputs = [
 		hs.HopsString("Token", "T", "Token" ),
 		hs.HopsInteger("ID", "I", "ID" ),
@@ -109,7 +125,7 @@ def giraffeGetProject(token, projectId):
 	"/giraffeGetProjectUsages",
 	name="giraffeGetProjectUsages",
 	description="giraffeGetProjectUsages",
-	icon="/home/sephbin/fenrir/icons/giraffeGetProjectUsages.png",
+	#icon="/home/sephbin/fenrir/#icons/giraffeGetProjectUsages.png",
 	inputs = [
 		hs.HopsString("Token", "T", "Token" ),
 		hs.HopsInteger("ID", "I", "ID" ),
@@ -138,7 +154,7 @@ def giraffeGetProjectUsages(token, projectId):
 	"/giraffeUpdateProject",
 	name="giraffeUpdateProject",
 	description="giraffeUpdateProject",
-	icon="/home/sephbin/fenrir/icons/giraffeUpdateProject.png",
+	#icon="/home/sephbin/fenrir/#icons/giraffeUpdateProject.png",
 	inputs = [
 		hs.HopsString("Token", "T", "Token" ),
 		hs.HopsString("JSON", "J", "JSON" ),
@@ -176,7 +192,7 @@ def giraffeUpdateProject(token, data):
 	"/QRencoder",
 	name = "QRencoder",
 	description = "Encodes input/s to a QR code binary",
-	icon = "",
+	#icon = "",
 	inputs = [
 		hs.HopsString("Data", "d", "Data to encode", access=hs.HopsParamAccess.LIST),
 	],
@@ -220,7 +236,7 @@ def cleanDictValues(dictionary):
 	"/requestGet",
 	name="requestGet",
 	description="requestGet",
-	# icon="icons/giraffeGetProject.png",
+	# #icon="#icons/giraffeGetProject.png",
 	inputs = [
 		hs.HopsString("url", "U", "url" ),
 		hs.HopsString("headers", "H", "headers" ),
@@ -264,7 +280,133 @@ def requestGet(url, headers):
 		# print("error",e)
 		return json.dumps({"error":str(e)})
 
+@hops.component(
+	"/renderSVG",
+	name="renderSVG",
+	description="renderSVG",
+	# #icon="#icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("SVG", "SVG", "SVG" ),
+	],
+	outputs = [
+		hs.HopsString("IMG", "IMG", "IMG"),
+	],
+)
+def renderSVG(svg):
+	try:
+		# import io
+		print("renderSVG", svg)
+		if type(svg) != type([]):
+			svg = [svg]
+		import subprocess
+		import locale
+		# from PIL import Image
+		inkscape = r"C:\Program Files\Inkscape\bin\inkscape.exe"
 
+		result = subprocess.run([inkscape, '--export-type=png', '--export-filename=-', f'--export-width={420*72}', f'--export-height={297*72}', '--pipe'], input=svg[0].encode(), capture_output=True)
+		
+		stdout =str(result.stdout)
+		print("-"*50)
+		print(stdout)
+		return stdout
+		# print(result)
+		# with open("testImg.png", "wb") as file:
+		# 	file.write(result.stdout)
+		# print(in_memory_file)
+	except Exception as e:
+		print(e)
+		return ""
+
+@hops.component(
+	"/textMatchList",
+	name="textMatchList",
+	description="textMatchList",
+	# ##icon="#icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("list", "L", "list", hs.HopsParamAccess.LIST),
+		hs.HopsString("search", "S", "search", hs.HopsParamAccess.LIST),
+		hs.HopsNumber("threshold", "T", "threshold"),
+	],
+	outputs = [
+		hs.HopsString("jsonOut", "J", "jsonOut"),
+	],
+)
+def textMatchList(L, S, T):
+	import json
+	from fuzzywuzzy import fuzz
+	from fuzzywuzzy import process
+	try:
+		out = []
+		for searchString in S:
+			# scored = process.extract(searchString, L, scorer=fuzz.token_sort_ratio)
+			scored = process.extract(searchString, L, limit=int(T))
+			print(scored)
+			out.append(str(scored))
+	except Exception as e:
+		print(e)
+	return out
+
+@hops.component(
+	"/devTest",
+	name="devTest",
+	description="devTest",
+	# #icon="#icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("url", "U", "url" ),
+		hs.HopsString("headers", "H", "headers" ),
+	],
+	outputs = [
+		hs.HopsInteger("jsonOut", "J", "jsonOut"),
+	],
+)
+def devTest(url, headers):
+	return 7
+
+@hops.component(
+	"/sendToDB",
+	name="sendToDB",
+	description="sendToDB",
+	# #icon="#icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("J", "J", "J" ),
+	],
+	outputs = [
+		hs.HopsString("PRINT", "PRINT", "PRINT"),
+	],
+)
+def sendToDB(J):
+	import json
+	try:
+		J = json.loads(J)
+
+		file = rhino3dm.File3dm()
+		for ob in J:
+			mesh = rhino3dm.GeometryBase.Decode(ob)
+			file.Objects.Add(mesh)
+		file.Write(r"C:\mydev\fenrir\files\test.3dm")
+
+		# print(J["InneerTree"])
+		# print(mesh)
+		# verts = map(lambda x: (x.X,x.Y,x.Z), mesh.Vertices)
+		# print(list(verts))
+		return "COMPLETED"
+	except Exception as e:
+		return str(e)
+
+@hops.component(
+    "/pointat",
+    name="PointAt",
+    description="Get point along curve",
+    inputs=[
+        hs.HopsCurve("Curve", "C", "Curve to evaluate"),
+        hs.HopsNumber("t", "t", "Parameter on Curve to evaluate"),
+    ],
+    outputs=[
+        hs.HopsPoint("P", "P", "Point on curve at t")
+    ]
+)
+def pointat(curve, t):
+    return curve.PointAt(t)
 
 
 if __name__ == "__main__":
