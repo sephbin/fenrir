@@ -486,5 +486,25 @@ def postGeom(pk):
 	return response
 
 
+@hops.component(
+	"/keyNoteClassify",
+	name="keyNoteClassify",
+	description="keyNoteClassify",
+	# icon="icons/giraffeGetProject.png",
+	inputs = [
+		hs.HopsString("Keynote", "K", "Keynote", hs.HopsParamAccess.LIST ),
+		hs.HopsString("TSheet", "T", "TSheet", optional=True ),
+	],
+	outputs = [
+		hs.HopsString("jsonOut", "J", "jsonOut"),
+	],
+)
+def keyNoteClassify(keynote, tSheet):
+	import json
+
+	return json.dumps({"code":"Ss_00_00_00_00"})
+
+
+
 if __name__ == "__main__":
 	app.run()
