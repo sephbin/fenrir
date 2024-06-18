@@ -501,8 +501,9 @@ def postGeom(pk):
 )
 def keyNoteClassify(keynote, tSheet):
 	import json
+	print(keynote, tSheet)
 
-	return json.dumps({"code":"Ss_00_00_00_00"})
+	return [json.dumps({"code":"Ss_00_00_00_00"})]
 
 
 
