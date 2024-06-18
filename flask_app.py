@@ -306,7 +306,7 @@ def renderSVG(svg):
 		import locale
 		# from PIL import Image
 		inkscape = r"C:\Program Files\Inkscape\bin\inkscape.exe"
-
+	except:pass
 @hops.component(
 	"/TEST",
 	name="TEST",
@@ -321,7 +321,7 @@ def renderSVG(svg):
 	],
 )
 def func_test(TEST=None):
-
+	try:
 		result = subprocess.run([inkscape, '--export-type=png', '--export-filename=-', f'--export-width={420*72}', f'--export-height={297*72}', '--pipe'], input=svg[0].encode(), capture_output=True)
 		
 		stdout =str(result.stdout)
