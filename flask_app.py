@@ -1,8 +1,8 @@
 from flask import Flask
-import ghhops_server as hs
+#import ghhops_server as hs
 import rhino3dm
 app = Flask(__name__)
-hops = hs.Hops(app)
+#hops = hs.Hops(app)
 
 @app.route("/roomNames")
 def roomNames():
@@ -266,7 +266,7 @@ def roomNames():
 		# {"name":"WRITTEN PRESS","department":"MEDIA FACILITIES","class":"boh aco-medium habitable"},
 	]
 	return names
-
+'''
 @hops.component(
 	"/projecttransform",
 	name="projecttransform",
@@ -778,7 +778,7 @@ def keyNoteClassify(keynotes, tSheet):
 	return [json.dumps(matches)]
 
 
-
+'''
 if __name__ == "__main__":
 	# app.run()
 	
